@@ -1,0 +1,11 @@
+.auth-form {
+  width: 100%;
+  max-width: 650px;
+  margin-inline: auto;
+}
+.auth-form label {
+  margin: 8px auto;
+}
+.auth-form button {
+  margin-top: 12px;
+}
