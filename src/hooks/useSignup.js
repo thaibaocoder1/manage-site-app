@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useAuthContext } from "./useAuthContext";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../firebase/config";
-import { doc, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useEffect, useState } from "react";
+import { auth, storage } from "../firebase/config";
+import { useAuthContext } from "./useAuthContext";
 
 export const useSignup = () => {
   const [isCancelled, setIsCancelled] = useState(false);
@@ -16,37 +15,36 @@ export const useSignup = () => {
     setIsPending(true);
 
     try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      if (!res.user) {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (!userCredential.user) {
         throw new Error("Could not complete signup");
       }
 
-      const uploadPath = `thumbnails/${res.user.uid}/${thumbnail.name}`;
+      const uploadPath = `thumbnails/${userCredential.user.uid}/${thumbnail.name}`;
       const thumbnailRef = ref(storage, uploadPath);
 
       await uploadBytes(thumbnailRef, thumbnail);
       const imageUrl = await getDownloadURL(thumbnailRef);
 
-      const userDocRef = doc(db, "users", res.user.uid);
-      await setDoc(
-        userDocRef,
-        {
-          uid: res.user.uid,
-          online: true,
-          email: res.user.email,
-          displayName: username,
-          photoURL: imageUrl,
-          createdAt: new Date(),
-        },
-        { merge: true }
-      );
+      // await setDoc(doc(db, "users", userCredential.user.uid), {
+      //   uid: userCredential.user.uid,
+      //   online: true,
+      //   email: userCredential.user.email,
+      //   displayName: username,
+      //   photoURL: imageUrl,
+      //   createdAt: new Date(),
+      // });
 
-      await updateProfile(res.user, {
+      await updateProfile(userCredential.user, {
         displayName: username,
         photoURL: imageUrl,
       });
 
-      dispatch({ type: "LOGIN", payload: res.user });
+      dispatch({ type: "LOGIN", payload: userCredential.user });
 
       if (!isCancelled) {
         setIsPending(false);
@@ -59,7 +57,6 @@ export const useSignup = () => {
       }
     }
   };
-
   useEffect(() => {
     return () => setIsCancelled(false);
   }, []);

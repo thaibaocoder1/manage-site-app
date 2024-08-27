@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import classes from "./style.module.css";
 import InputController from "../FormControllers/InputController";
+import { useLogin } from "../../hooks/useLogin";
+import { useNavigate } from "react-router-dom";
 
 const schema = yup.object({
   email: yup
@@ -21,8 +23,12 @@ const LoginForm = () => {
     resolver: yupResolver(schema),
     mode: "onTouched",
   });
-  const handleSubmitForm = (data) => {
-    console.log(data);
+  const navigate = useNavigate();
+  const { login, isPending } = useLogin();
+  const handleSubmitForm = async (data) => {
+    const { email, password } = data;
+    await login(email, password);
+    navigate("/", { replace: true });
   };
   return (
     <form
@@ -42,8 +48,8 @@ const LoginForm = () => {
         name={"password"}
         type="password"
       />
-      <button className="btn" type="submit">
-        Log in
+      <button className="btn" type="submit" disabled={isPending}>
+        {isPending ? "Submitting" : "Log in"}
       </button>
     </form>
   );

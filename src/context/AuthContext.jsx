@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { createContext, useEffect, useReducer } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase/config";
 
 export const AuthContext = createContext({
@@ -27,10 +28,10 @@ export const AuthContextProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
       dispatch({ type: "AUTH_IS_READY", payload: user });
-      unsub();
     });
+    return () => unsub();
   }, []);
 
   console.log("AuthContext state:", state);
@@ -41,6 +42,7 @@ export const AuthContextProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 AuthContextProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };

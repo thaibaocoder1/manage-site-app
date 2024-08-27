@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import icon from "../../assets/react.svg";
 import classes from "./style.module.css";
+import { useLogout } from "../../hooks/useLogout";
+import { auth } from "../../firebase/config";
 
 const Navbar = () => {
+  const { logout, isPending } = useLogout();
+  const navigate = useNavigate();
+  const user = auth.currentUser;
+
   return (
     <nav className={classes.navbar}>
       <ul>
@@ -16,6 +22,20 @@ const Navbar = () => {
         <li>
           <Link to="/signup">Signup</Link>
         </li>
+        {user?.uid && (
+          <li>
+            <button
+              className="btn"
+              onClick={async () => {
+                await logout();
+                navigate("/login");
+              }}
+              disabled={isPending}
+            >
+              {isPending ? "Logging out..." : "Logout"}
+            </button>
+          </li>
+        )}
       </ul>
     </nav>
   );

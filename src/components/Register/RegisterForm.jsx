@@ -1,6 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { useSignup } from "../../hooks/useSignup";
 import { isValidFileType } from "../../utils/validation";
@@ -38,12 +39,15 @@ const RegisterForm = () => {
     resolver: yupResolver(schema),
     mode: "onTouched",
   });
+  const navigate = useNavigate();
   const [preview, setPreview] = useState();
-  const { signup, isPending } = useSignup();
+  const { signup, isPending, error } = useSignup();
   const handleSubmitForm = async (data) => {
     const { email, password, username, thumbnail } = data;
     await signup(email, password, username, thumbnail);
+    navigate("/login");
   };
+
   const handlePreviewImage = (imageUrl) => {
     imageUrl && setPreview(imageUrl);
   };
@@ -76,6 +80,7 @@ const RegisterForm = () => {
       <button className="btn" type="submit" disabled={isPending}>
         {isPending ? "Submitting" : "Register"}
       </button>
+      {error && <div className="error">{error}</div>}
     </form>
   );
 };

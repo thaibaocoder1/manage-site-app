@@ -1,41 +1,41 @@
-import { useEffect, useState } from 'react'
-import { projectAuth } from '../firebase/config'
-import { useAuthContext } from './useAuthContext'
+import { signOut } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { auth, db } from "../firebase/config";
+import { useAuthContext } from "./useAuthContext";
 
 export const useLogout = () => {
-  const [isCancelled, setIsCancelled] = useState(false)
-  const [error, setError] = useState(null)
-  const [isPending, setIsPending] = useState(false)
-  const { dispatch } = useAuthContext()
-  
+  const [isCancelled, setIsCancelled] = useState(false);
+  const [error, setError] = useState(null);
+  const [isPending, setIsPending] = useState(false);
+  const { dispatch, user } = useAuthContext();
+
   const logout = async () => {
-    setError(null)
-    setIsPending(true)
+    setError(null);
+    setIsPending(true);
 
     try {
-      // sign the user out
-      await projectAuth.signOut()
-      
-      // dispatch logout action
-      dispatch({ type: 'LOGOUT' })
-
-      // update state
+      await signOut(auth);
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, {
+        online: false,
+      });
+      dispatch({ type: "LOGOUT" });
       if (!isCancelled) {
-        setIsPending(false)
-        setError(null)
-      } 
-    } 
-    catch(err) {
+        setIsPending(false);
+        setError(null);
+      }
+    } catch (err) {
       if (!isCancelled) {
-        setError(err.message)
-        setIsPending(false)
+        setError(err.message);
+        setIsPending(false);
       }
     }
-  }
+  };
 
   useEffect(() => {
-    return () => setIsCancelled(true)
-  }, [])
+    return () => setIsCancelled(false);
+  }, []);
 
-  return { logout, error, isPending }
-}
+  return { logout, error, isPending };
+};
